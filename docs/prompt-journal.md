@@ -49,18 +49,40 @@ Ye journal SupportDesk project ke dauran AI ke sath ki gayi key interactions, pr
 
 ---
 
-## Entry 6: TypeScript CLI & Test-Driven Development (Day 5)
-- **Prompt:** "Help me design a TypeScript function for generating random structured ticket IDs and a CSV-to-JSON parser with robust edge-case handling."
-- **AI Response Summary:** Provided clean TypeScript implementation using Node.js `fs` module and string manipulation.
-- **Changes Made:** Implemented `generateTicketId` and `convertCsvToJson` inside `apps/cli/src/index.ts`.
-- **Reasons for Changes:** To automate ticket tracking setup and seed data ingestion for SupportDesk.
-- **Verification Steps:** Created unit tests covering custom prefixes, empty files, and error throwing.
+## Entry 6: Plan-First Prompting (Day 5)
+- **Date/Context:** 2026-10-27 | SupportDesk CLI Implementation
+- **Goal:** Inspect requirements and propose a step-by-step implementation plan before writing any code.
+- **Prompt Used:** *"I need a TypeScript CLI in the SupportDesk repository that generates ticket IDs and converts CSV ticket records to JSON. Do not write code yet. Summarize the requirements, list assumptions, propose an implementation plan, identify likely files to change, and describe risks."*
+- **AI Response Summary:** Provided a modular plan covering folder setup, utility logic, testing with Jest, and error handling.
+- **Changes Made & Why:** Added explicit constraints to ensure Node.js file system (`fs`) checks missing paths safely without crashing.
+- **Outcome:** Clear roadmap established before touching code files.
 
 ---
 
-## Entry 7: Writing Jest Unit Tests for CLI Tools (Day 5)
-- **Prompt:** "Write at least 8 comprehensive Jest test cases for the ticket ID generator and CSV parser covering success and error scenarios."
-- **AI Response Summary:** Generated structured Jest test suites with mock file setup and teardown (`fs.writeFileSync` / `fs.unlinkSync`).
-- **Changes Made:** Added `ticket.test.ts` with 8 passing test cases.
-- **Reasons for Changes:** To ensure code reliability, catch regression bugs, and satisfy the Day 5 verification checklist.
-- **Verification Steps:** Executed `npx jest` and verified all 8 test cases passed successfully.
+## Entry 7: Clarifying-Question Prompting (Day 5)
+- **Date/Context:** 2026-10-27 | Requirements Validation
+- **Goal:** Identify ambiguous requirements, ticket ID formats, and CSV error-handling rules before coding.
+- **Prompt Used:** *"Before suggesting code, identify ambiguities in the ticket CLI task. Ask questions about ticket ID format, required CSV columns, empty files, malformed rows, validation, and expected output."*
+- **AI Response Summary:** Raised questions regarding default prefixes, timestamp slicing, empty CSV fallback behavior, and missing column exceptions.
+- **Changes Made & Why:** Confirmed standard prefix as `SUP-`, decided empty CSV files should return an empty array `[]`, and missing files must throw descriptive errors.
+- **Outcome:** Eliminated guesswork and locked down exact behavioral contracts.
+
+---
+
+## Entry 8: Test-First Prompting (Day 5)
+- **Date/Context:** 2026-10-27 | Jest Unit Test Design
+- **Goal:** Define test scenarios and propose Jest unit tests before writing the feature code.
+- **Prompt Used:** *"Do not implement the feature yet. Propose Jest tests for ticket ID generation and CSV-to-JSON conversion. Include valid input, empty input, missing columns, malformed rows, invalid values, and repeated ID generation."*
+- **AI Response Summary:** Proposed comprehensive test cases covering format validation, uniqueness, empty checks, and file errors.
+- **Changes Made & Why:** Adopted test structures directly into `apps/cli/src/ticket.test.ts` to ensure robust coverage.
+- **Outcome:** Successfully ran `npm test` and verified all 8 test cases passed.
+
+---
+
+## Entry 9: Structured Debugging Prompting (Day 5)
+- **Date/Context:** 2026-10-27 | Local Debugging Exercise
+- **Goal:** Diagnose an intentional local bug systematically using structured error reporting and minimal fixes.
+- **Prompt Used:** *"Help me debug this without rewriting the whole feature. Expected behaviour: Ticket ID should contain hyphens. Actual behaviour: Hyphens were missing causing test failure. Exact error: expect(received).toBe(true) received false. Relevant code: generateTicketId function."*
+- **AI Response Summary:** Identified that the string template literal was missing hyphens (`-`) between tokens.
+- **Changes Made & Why:** Restored hyphens in `generateTicketId` to match the expected format validation.
+- **Outcome:** Reran `npm test` successfully; confirmed the bug was caught by tests and fixed locally without committing the broken state.

@@ -33,3 +33,4 @@ export function convertCsvToJson(csvFilePath: string): any[] {
 
     return result;
 }
+console.log("Generated Ticket ID:", generateTicketId());
