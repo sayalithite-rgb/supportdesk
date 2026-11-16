@@ -1,75 +1,68 @@
-import { Prisma, TicketPriority, TicketStatus } from '@prisma/client';
-import { prisma } from './prisma';
-import { AppError } from '../utils/AppError';
+import { PrismaClient, Ticket, Prisma } from '@prisma/client';
+import { buildTicketOrderBy } from '../utils/ticketSort';
 
-export type TicketFilters = {
-  status?: TicketStatus;
-  priority?: TicketPriority;
-  assigneeId?: string;
-};
-
-// passwordHash is never selected, so it cannot leak in responses
-const ticketInclude = {
-  createdBy: { select: { id: true, name: true, email: true } },
-  assignee: { select: { id: true, name: true, email: true } },
-  tags: { include: { tag: true } },
-} satisfies Prisma.TicketInclude;
-
-function buildWhere(filters: TicketFilters): Prisma.TicketWhereInput {
-  return {
-    ...(filters.status && { status: filters.status }),
-    ...(filters.priority && { priority: filters.priority }),
-    ...(filters.assigneeId && { assigneeId: filters.assigneeId }),
-  };
-}
-
-// Prisma-specific errors are translated here so no other layer needs Prisma
-function translatePrismaError(err: unknown): never {
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    if (err.code === 'P2002') throw AppError.conflict('A record with these values already exists');
-    if (err.code === 'P2025') throw AppError.notFound('Ticket not found');
-    if (err.code === 'P2003') {
-      throw AppError.badRequest('A referenced record does not exist', 'INVALID_REFERENCE');
-    }
-  }
-  throw err;
-}
+const prisma = new PrismaClient();
 
 export const ticketsRepository = {
-  findMany: (filters: TicketFilters, skip: number, take: number) =>
-    prisma.ticket.findMany({
-      where: buildWhere(filters),
-      skip,
-      take,
-      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
-      include: ticketInclude,
-    }),
+  async findMany(params: {
+    where: Prisma.TicketWhereInput;
+    skip: number;
+    take: number;
+    sortBy?: string;
+    sortOrder?: string;
+  }) {
+    const { where, skip, take, sortBy, sortOrder } = params;
+    const orderBy = buildTicketOrderBy(sortBy, sortOrder);
 
-  count: (filters: TicketFilters) => prisma.ticket.count({ where: buildWhere(filters) }),
+    const [tickets, total] = await Promise.all([
+      prisma.ticket.findMany({
+        where,
+        skip,
+        take,
+        orderBy,
+        include: {
+          createdBy: { select: { id: true, name: true, email: true } },
+          assignee: { select: { id: true, name: true, email: true } },
+        },
+      }),
+      prisma.ticket.count({ where }),
+    ]);
 
-  findById: (id: string) => prisma.ticket.findUnique({ where: { id }, include: ticketInclude }),
+    return { tickets, total };
+  },
+
+  async findById(id: string): Promise<Ticket | null> {
+    return prisma.ticket.findUnique({
+      where: { id },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignee: { select: { id: true, name: true, email: true } },
+      },
+    });
+  },
 
   async create(data: Prisma.TicketUncheckedCreateInput) {
-    try {
-      return await prisma.ticket.create({ data, include: ticketInclude });
-    } catch (err) {
-      return translatePrismaError(err);
-    }
+    return prisma.ticket.create({
+      data,
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignee: { select: { id: true, name: true, email: true } },
+      },
+    });
   },
 
   async update(id: string, data: Prisma.TicketUncheckedUpdateInput) {
-    try {
-      return await prisma.ticket.update({ where: { id }, data, include: ticketInclude });
-    } catch (err) {
-      return translatePrismaError(err);
-    }
+    return prisma.ticket.update({
+      where: { id },
+      data,
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignee: { select: { id: true, name: true, email: true } },
+      },
+    });
   },
 
   async delete(id: string) {
-    try {
-      return await prisma.ticket.delete({ where: { id } });
-    } catch (err) {
-      return translatePrismaError(err);
-    }
+    return prisma.ticket.delete({ where: { id } });
   },
 };

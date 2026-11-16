@@ -2,10 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "moduleResolution": "node",
     "rootDir": "src",
     "outDir": "dist",
     "strict": true,
+     "types": ["jest", "node", "supertest", "jsonwebtoken", "express-rate-limit"],
     "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,

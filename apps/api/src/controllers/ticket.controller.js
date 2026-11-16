@@ -1,24 +1,52 @@
-// apps/api/src/controllers/ticket.controller.js
-const ticketService = require('../services/ticket.service');
+import { asyncHandler } from '../utils/asyncHandler';
+import { sendSuccess } from '../utils/response';
+import { getAuthUser } from '../utils/authUser';
+import { ticketsService } from '../services/tickets.service';
+import {
+  createTicketSchema,
+  idParamSchema,
+  listQuerySchema,
+  replaceTicketSchema,
+  updateTicketSchema,
+} from '../validation/tickets.validation';
 
-class TicketController {
-  getAll(req, res) {
-    try {
-      const items = ticketService.getAllTickets();
-      return res.status(200).json({ success: true, count: items.length, items });
-    } catch (err) {
-      return res.status(500).json({ success: false, error: err.message });
-    }
-  }
+export const ticketsController = {
+  list: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const query = listQuerySchema.parse(req.query);
+    const { items, meta } = await ticketsService.listTickets(query, actor);
+    sendSuccess(res, items, meta);
+  }),
 
-  create(req, res) {
-    try {
-      const newTicket = ticketService.createTicket(req.body);
-      return res.status(201).json({ success: true, ticket: newTicket });
-    } catch (err) {
-      return res.status(400).json({ success: false, error: err.message });
-    }
-  }
-}
+  getById: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const { id } = idParamSchema.parse(req.params);
+    sendSuccess(res, await ticketsService.getTicketById(id, actor));
+  }),
 
-module.exports = new TicketController();
+  create: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const input = createTicketSchema.parse(req.body);
+    sendSuccess(res, await ticketsService.createTicket(input, actor), {}, 201);
+  }),
+
+  replace: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const { id } = idParamSchema.parse(req.params);
+    const input = replaceTicketSchema.parse(req.body);
+    sendSuccess(res, await ticketsService.replaceTicket(id, input, actor));
+  }),
+
+  update: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const { id } = idParamSchema.parse(req.params);
+    const input = updateTicketSchema.parse(req.body);
+    sendSuccess(res, await ticketsService.updateTicket(id, input, actor));
+  }),
+
+  remove: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const { id } = idParamSchema.parse(req.params);
+    sendSuccess(res, await ticketsService.deleteTicket(id, actor));
+  }),
+};

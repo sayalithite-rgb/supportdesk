@@ -17,9 +17,14 @@ export const listQuerySchema = z.object({
   status: ticketStatusSchema.optional(),
   priority: ticketPrioritySchema.optional(),
   assigneeId: z.string().min(1).optional(),
+  search: z.string().optional(),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'priority', 'status', 'title']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+export const getTicketsQuerySchema = listQuerySchema;
 
 export const createTicketSchema = z.strictObject({
   title: z.string().trim().min(1, 'title is required').max(200),
@@ -28,9 +33,10 @@ export const createTicketSchema = z.strictObject({
   status: ticketStatusSchema.default('open'),
   priority: ticketPrioritySchema.default('P3'),
   slaDueAt: z.coerce.date().optional(),
-  createdById: z.string().min(1, 'createdById is required'), // temporary until auth (Day 10)
   assigneeId: z.string().min(1).optional(),
 });
+
+export const replaceTicketSchema = createTicketSchema;
 
 export const updateTicketSchema = z
   .strictObject({

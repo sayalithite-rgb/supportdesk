@@ -1,13 +1,20 @@
 import { Router } from 'express';
-import { TicketsController } from '../controllers/tickets.controller';
+import { ticketsController } from '../controllers/tickets.controller';
+import { requireAuth } from '../middleware/requireAuth';
+import { requireRole } from '../middleware/requireRole';
 
 const router = Router();
 
-// Routes mapping (TicketsController ek object hai, isliye new ke bina call hoga)
-router.get('/', TicketsController.list);
-router.post('/', TicketsController.create);
-router.get('/:id', TicketsController.getById);
-router.patch('/:id', TicketsController.update);
-router.delete('/:id', TicketsController.remove);
+const anyUser = requireRole('customer', 'agent', 'admin');
+const staffOnly = requireRole('agent', 'admin');
+
+router.use(requireAuth); // every ticket route needs a valid token
+
+router.get('/', anyUser, ticketsController.list);
+router.get('/:id', anyUser, ticketsController.getById);
+router.post('/', anyUser, ticketsController.create);
+router.put('/:id', staffOnly, ticketsController.replace);
+router.patch('/:id', staffOnly, ticketsController.update);
+router.delete('/:id', staffOnly, ticketsController.remove);
 
 export default router;

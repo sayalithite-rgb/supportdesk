@@ -1,5 +1,5 @@
 import { PrismaClient, Role, TicketStatus, TicketPriority } from '@prisma/client';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 
@@ -18,6 +18,7 @@ type SeedTicket = {
   tags?: string;
 };
 
+// Fictional users only
 const USERS = [
   { name: 'Admin User', email: 'admin@supportdesk.test', role: Role.admin },
   { name: 'Asha Agent', email: 'agent.asha@supportdesk.test', role: Role.agent },
@@ -27,24 +28,26 @@ const USERS = [
   { name: 'Mia Customer', email: 'customer.mia@example.com', role: Role.customer },
 ];
 
-// Fake hash for fictional seed users only (real auth comes later)
-function fakeHash(password: string): string {
-  const salt = crypto.randomBytes(8).toString('hex');
-  return `scrypt$${salt}$${crypto.scryptSync(password, salt, 32).toString('hex')}`;
-}
-
 async function main() {
+  // The seed password comes from apps/api/.env (never hard-code or commit it)
+  const seedPassword = process.env.SEED_USER_PASSWORD;
+  if (!seedPassword || seedPassword.length < 10) {
+    throw new Error('Set SEED_USER_PASSWORD (min 10 chars) in apps/api/.env before seeding');
+  }
+
   if (!fs.existsSync(JSON_PATH)) throw new Error(`Seed JSON not found: ${JSON_PATH}`);
   const tickets: SeedTicket[] = JSON.parse(fs.readFileSync(JSON_PATH, 'utf-8'));
   console.log(`Read ${tickets.length} tickets from JSON`);
 
-  // 1. Users (upsert = safe to re-run)
+  const passwordHash = await bcrypt.hash(seedPassword, 12);
+
+  // 1. Users (upsert = safe to re-run; the password hash is refreshed each time)
   const userIds = new Map<string, string>();
   for (const u of USERS) {
     const user = await prisma.user.upsert({
       where: { email: u.email },
-      update: { name: u.name, role: u.role },
-      create: { ...u, passwordHash: fakeHash('ChangeMe123!') },
+      update: { name: u.name, role: u.role, passwordHash },
+      create: { ...u, passwordHash },
     });
     userIds.set(u.email, user.id);
   }
@@ -93,7 +96,11 @@ async function main() {
             ...(assigneeId && {
               comments: {
                 create: [
-                  { body: 'Thanks for reaching out, we are looking into this.', isInternal: false, authorId: assigneeId },
+                  {
+                    body: 'Thanks for reaching out, we are looking into this.',
+                    isInternal: false,
+                    authorId: assigneeId,
+                  },
                 ],
               },
             }),
@@ -105,6 +112,7 @@ async function main() {
   );
 
   const count = await prisma.ticket.count();
+  console.log(`Users in database: ${await prisma.user.count()}`);
   console.log(`Tickets in database: ${count}`);
   if (count !== 50) throw new Error(`Expected 50 tickets but found ${count}`);
 }
