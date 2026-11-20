@@ -86,3 +86,58 @@ Ye journal SupportDesk project ke dauran AI ke sath ki gayi key interactions, pr
 - **AI Response Summary:** Identified that the string template literal was missing hyphens (`-`) between tokens.
 - **Changes Made & Why:** Restored hyphens in `generateTicketId` to match the expected format validation.
 - **Outcome:** Reran `npm test` successfully; confirmed the bug was caught by tests and fixed locally without committing the broken state.
+## Day 13 — Frontend Foundations (`SupportDesk`)
+**Date:** 17 November 2026  
+**Project:** SupportDesk (`apps/web`)  
+
+### 1. Objective
+Set up the React, Vite, TypeScript, and Tailwind CSS frontend foundation with a feature-based directory structure, a centralized environment-configured API client (`VITE_API_BASE_URL`), a responsive login flow, shared application layout, and protected routes connected to the real backend authentication mechanism[cite: 1].
+
+---
+
+### 2. Prompts Used
+* **Planning Prompt:**  
+  > *"Act as a senior frontend engineer working on the SupportDesk React application. Inspect the existing repository and supplied login API contract. Do not write code yet. Create an implementation plan for a responsive login page, shared application layout, one API client whose base URL comes from an environment variable, authentication state based on the actual backend mechanism, protected routes, and clear loading/validation/success/error states. Use existing React, Vite, TypeScript and Tailwind conventions. Identify files to create or modify, dependencies, risks and tests. Do not invent endpoints, response fields, packages or authentication behaviour."*[cite: 1]
+
+* **API Client Prompt:**  
+  > *"Implement one shared API client based on the actual SupportDesk repository and backend contract. Requirements: TypeScript strict mode; base URL from import.meta.env.VITE_API_BASE_URL; central request configuration and error handling; actual authentication mechanism; no hard-coded URLs; no invented endpoints; no API calls in React components; focused success and failure tests."*[cite: 1]
+
+* **Debugging & Integration Prompt:**  
+  > *"Diagnosed POST http://localhost:3000/api/auth/login 404 (Not Found) and INVALID_CREDENTIALS error when connecting LoginPage to the live backend API."*[cite: 3]
+
+* **Code Review Prompt:**  
+  > *"Act as a senior frontend architect reviewing my Day 13 SupportDesk implementation. Inspect the actual diff and repository context. Verify: React/Vite/TypeScript conventions; folder structure; no API calls or fetch inside UI components; API base URL from VITE_API_BASE_URL; real backend login contract; auth state and protected routes match the backend; loading/validation/error/responsive states; accessibility; no exposed secrets; and meaningful tests."*[cite: 1]
+
+---
+
+### 3. AI Output & Implementation Summary
+* **Folder Structure Created (`apps/web/src`):**
+  * `pages/` (`LoginPage.tsx`, `TicketsPage.tsx`)[cite: 1, 2]
+  * `components/` (`AppLayout.tsx`, `ProtectedRoute.tsx`)[cite: 1, 2]
+  * `features/tickets/` (`api/`, `hooks/`, `components/`)[cite: 1]
+  * `lib/` (`api-client.ts`, `auth.tsx`)[cite: 1, 2]
+* **Centralized API Client (`src/lib/api-client.ts`):**
+  * Configured `baseURL` using `import.meta.env.VITE_API_BASE_URL` without hard-coded URLs[cite: 1].
+  * Added request/response handling to attach credentials/tokens and handle unauthorized (`401`) responses safely.
+* **Login & App Shell:**
+  * Built responsive `LoginPage.tsx` with React Hook Form validation, disabled submit state during requests, and server/validation error banners[cite: 1, 2].
+  * Built `AppLayout.tsx` with sidebar navigation (`SupportDesk`, `Tickets`), header with `Logout` action, and main content outlet[cite: 1, 4].
+
+---
+
+### 4. Issues Encountered & Fixes Applied (Independent Verification)
+1. **404 Not Found on Login (`POST /api/auth/login`):**
+   * **Root Cause:** `VITE_API_BASE_URL` included `/api` (`http://localhost:3000/api`), whereas the backend auth route was mounted directly at `http://localhost:3000/auth/login`[cite: 3].
+   * **Fix:** Updated `VITE_API_BASE_URL=http://localhost:3000` in `.env` / `.env.example` and restarted the Vite dev server.
+2. **Invalid Credentials During API Verification:**
+   * **Root Cause:** Tested with unseeded credentials (`sayali12.new@example.com`), returning `INVALID_CREDENTIALS` from the backend[cite: 2, 3].
+   * **Fix:** Verified valid user records in Prisma Studio and authenticated successfully against the live backend[cite: 3, 4].
+3. **Architecture & Boundary Check:**
+   * Verified zero direct `fetch()` or API calls inside UI components (`LoginPage.tsx`, `AppLayout.tsx`, `TicketsPage.tsx`)[cite: 1, 2].
+
+---
+
+### 5. Verification Evidence
+* **Backend Endpoint Check:** Verified `POST http://localhost:3000/auth/login` via PowerShell `Invoke-RestMethod` and browser Network tab (`200 OK` on valid credentials, structured `401` error on invalid credentials)[cite: 3].
+* **Protected Routes:** Confirmed unauthenticated visits redirect to `/login` and authenticated login redirects to `http://localhost:5173` (`Tickets` view inside `AppLayout`)[cite: 1, 2, 4].
+* **Responsive & Console Check:** Tested mobile viewport (`369x501`) and desktop layout; confirmed no sensitive tokens or secrets are logged to the console[cite: 1, 3, 4].

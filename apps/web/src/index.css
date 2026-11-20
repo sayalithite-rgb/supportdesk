@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-amz-navy: #131921;
+  --color-amz-navy-light: #232f3e;
+  --color-amz-orange: #ff9900;
+  --color-amz-orange-light: #febd69;
+  --color-amz-yellow: #ffd814;
+  --color-amz-yellow-dark: #f7ca00;
+  --color-amz-link: #007185;
+  --color-amz-link-hover: #c7511f;
+  --color-amz-bg: #eaeded;
+  --color-amz-border: #d5d9d9;
+  --color-amz-text: #0f1111;
+  --font-sans: "Amazon Ember", Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-amz-bg);
+  color: var(--color-amz-text);
+  font-family: var(--font-sans);
+}
