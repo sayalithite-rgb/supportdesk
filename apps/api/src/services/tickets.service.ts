@@ -1,4 +1,5 @@
 import { ticketsRepository } from '../repositories/tickets.repository';
+import { usersRepository } from '../repositories/users.repository';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../utils/AppError';
 import type {
@@ -21,7 +22,11 @@ export const ticketsService = {
 
     if (status) where.status = status;
     if (priority) where.priority = priority;
-    if (assigneeId) where.assigneeId = assigneeId;
+    if (user.role === 'agent') {
+      where.assigneeId = user.id;
+    } else if (assigneeId) {
+      where.assigneeId = assigneeId;
+    }
 
     // Search filter implementation across title and description
     if (search) {
@@ -86,6 +91,25 @@ export const ticketsService = {
     if (user.role === 'customer') throw AppError.forbidden('Only staff can update tickets');
     await ticketsService.getTicketById(id, user);
     return ticketsRepository.update(id, input);
+  },
+
+  async assignTicket(
+    id: string,
+    assigneeId: string | null,
+    user: { id: string; role: string }
+  ) {
+    if (user.role !== 'admin') throw AppError.forbidden('Only admins can assign tickets');
+    await ticketsService.getTicketById(id, user);
+
+    if (assigneeId !== null) {
+      const assignee = await usersRepository.findById(assigneeId);
+      if (!assignee) throw AppError.notFound('Assignee not found');
+      if (assignee.role !== 'agent') {
+        throw AppError.badRequest('Tickets can only be assigned to agents');
+      }
+    }
+
+    return ticketsRepository.update(id, { assigneeId });
   },
 
   async deleteTicket(id: string, user: { id: string; role: string }) {

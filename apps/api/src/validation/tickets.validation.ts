@@ -52,6 +52,10 @@ export const updateTicketSchema = z
     message: 'Provide at least one field to update',
   });
 
+export const assignTicketSchema = z.strictObject({
+  assigneeId: z.string().min(1).nullable(),
+});
+
 export type ListTicketsQuery = z.infer<typeof listQuerySchema>;
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;

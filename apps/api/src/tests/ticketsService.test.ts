@@ -9,7 +9,7 @@ describe('ticketsService', () => {
     jest.clearAllMocks();
   });
 
-  it('should fetch tickets for agent without customer restriction', async () => {
+  it('should restrict agents to tickets assigned to themselves', async () => {
     (ticketsRepository.findMany as jest.Mock).mockResolvedValue({
       tickets: [{ id: 'ticket-1', title: 'Test Ticket' }],
       total: 1,
@@ -17,12 +17,12 @@ describe('ticketsService', () => {
 
     const result = await ticketsService.getTickets(
       { id: 'agent-1', role: 'agent' },
-      { page: 1, limit: 10 }
+      { page: 1, limit: 10, assigneeId: 'agent-2' }
     );
 
     expect(ticketsRepository.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {},
+        where: { assigneeId: 'agent-1' },
         skip: 0,
         take: 10,
       })
@@ -63,6 +63,7 @@ describe('ticketsService', () => {
     expect(ticketsRepository.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
+          assigneeId: 'agent-1',
           OR: [
             { title: { contains: 'login error', mode: 'insensitive' } },
             { description: { contains: 'login error', mode: 'insensitive' } },

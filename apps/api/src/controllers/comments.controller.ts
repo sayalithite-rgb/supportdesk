@@ -1,50 +1,42 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { commentsService } from '../services/comments.service';
+import { createCommentSchema } from '../validation/comments.validation';
+import { AppError } from '../utils/AppError';
+import { asyncHandler } from '../utils/asyncHandler';
+import { sendSuccess } from '../utils/response';
 
 export const commentsController = {
-  async createComment(req: Request, res: Response, next: NextFunction) {
-    try {
-      const user = req.user;
-      const ticketId = Array.isArray(req.params.ticketId) ? req.params.ticketId[0] : req.params.ticketId;
-      const { content } = req.body as { content?: string };
+  createComment: asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user;
+    const ticketId = Array.isArray(req.params.ticketId)
+      ? req.params.ticketId[0]
+      : req.params.ticketId;
 
-      if (!user) {
-        return next(new Error('Authentication required'));
-      }
-      if (!content) {
-        return next(new Error('Comment content is required'));
-      }
+    if (!user) throw AppError.unauthorized('Authentication required');
+    if (!ticketId) throw AppError.badRequest('Ticket id is required');
 
-      const comment = await commentsService.createComment(user, ticketId, content);
+    const input = createCommentSchema.parse(req.body);
+    const comment = await commentsService.createComment(
+      user,
+      ticketId,
+      input.content,
+      input.isInternal
+    );
 
-      return res.status(201).json({
-        data: { comment },
-        error: null,
-        meta: {},
-      });
-    } catch (error) {
-      return next(error);
-    }
-  },
+    sendSuccess(res, comment, {}, 201);
+  }),
 
-  async listComments(req: Request, res: Response, next: NextFunction) {
-    try {
-      const user = req.user;
-      const ticketId = Array.isArray(req.params.ticketId) ? req.params.ticketId[0] : req.params.ticketId;
+  listComments: asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user;
+    const ticketId = Array.isArray(req.params.ticketId)
+      ? req.params.ticketId[0]
+      : req.params.ticketId;
 
-      if (!user) {
-        return next(new Error('Authentication required'));
-      }
+    if (!user) throw AppError.unauthorized('Authentication required');
+    if (!ticketId) throw AppError.badRequest('Ticket id is required');
 
-      const comments = await commentsService.getCommentsByTicketId(user, ticketId);
+    const comments = await commentsService.getCommentsByTicketId(user, ticketId);
 
-      return res.status(200).json({
-        data: { comments },
-        error: null,
-        meta: {},
-      });
-    } catch (error) {
-      return next(error);
-    }
-  },
+    sendSuccess(res, comments);
+  }),
 };

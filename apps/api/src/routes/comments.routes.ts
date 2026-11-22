@@ -2,10 +2,10 @@ import { Router } from 'express';
 import { commentsController } from '../controllers/comments.controller';
 import { requireAuth } from '../middleware/requireAuth';
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.use(requireAuth);
-router.post('/tickets/:ticketId/comments', commentsController.createComment);
-router.get('/tickets/:ticketId/comments', commentsController.listComments);
+router.post('/', commentsController.createComment);
+router.get('/', commentsController.listComments);
 
 export default router;

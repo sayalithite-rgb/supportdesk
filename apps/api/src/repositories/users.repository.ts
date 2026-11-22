@@ -8,6 +8,13 @@ export const usersRepository = {
   findById: (id: string) =>
     prisma.user.findUnique({ where: { id }, select: { id: true, role: true } }),
 
+  findAgents: () =>
+    prisma.user.findMany({
+      where: { role: 'agent' },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: 'asc' },
+    }),
+
   // Includes passwordHash: use ONLY for login, never send this object to the client
   findByEmail: (email: string) => prisma.user.findUnique({ where: { email } }),
 

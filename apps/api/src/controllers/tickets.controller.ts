@@ -6,6 +6,7 @@ import {
   createTicketSchema,
   idParamSchema,
   getTicketsQuerySchema,
+  assignTicketSchema,
   replaceTicketSchema,
   updateTicketSchema,
 } from '../validation/tickets.validation';
@@ -35,6 +36,13 @@ export const ticketsController = {
     const { id } = idParamSchema.parse(req.params);
     const input = replaceTicketSchema.parse(req.body);
     sendSuccess(res, await ticketsService.replaceTicket(id, input, actor));
+  }),
+
+  assign: asyncHandler(async (req, res) => {
+    const actor = getAuthUser(req);
+    const { id } = idParamSchema.parse(req.params);
+    const input = assignTicketSchema.parse(req.body);
+    sendSuccess(res, await ticketsService.assignTicket(id, input.assigneeId, actor));
   }),
 
   update: asyncHandler(async (req, res) => {
