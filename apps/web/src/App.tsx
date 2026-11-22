@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage'
 import TicketsPage from './pages/TicketsPage'
 import NewTicketPage from './pages/NewTicketPage'
 import TicketDetailPage from './pages/TicketDetailPage'
+import MyWorkPage from './pages/MyWorkPage'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -15,6 +16,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
+          <Route path="/my-work" element={<MyWorkPage />} />
           <Route path="/tickets/new" element={<NewTicketPage />} />
           <Route path="/tickets/:id" element={<TicketDetailPage />} />
         </Route>

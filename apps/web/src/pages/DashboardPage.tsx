@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../features/tickets/components/StatusBadge'
+import CategoryBadge from '../features/tickets/components/CategoryBadge'
 import { ErrorState, LoadingState } from '../features/tickets/components/StateMessage'
 import { useTicketCounts, useTicketList } from '../features/tickets/hooks/useTicketQueries'
 import { getSessionUser, isStaff } from '../lib/role'
@@ -89,7 +90,9 @@ export default function DashboardPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold">Recent tickets</h2>
-            <p className="text-sm text-slate-600">Your latest support requests</p>
+            <p className="text-sm text-slate-600">
+              {staff ? 'Latest requests from customers' : 'Your latest support requests'}
+            </p>
           </div>
           <Link to="/tickets" className="text-sm font-medium text-amz-link hover:text-amz-link-hover hover:underline">
             View all
@@ -107,11 +110,12 @@ export default function DashboardPage() {
               <Link to="/tickets/new" className="text-amz-link hover:underline">Create your first ticket</Link>
             </p>
           ) : (
-            <table className="w-full min-w-[520px] text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-amz-border">
                   <th scope="col" className="py-2 pr-4 font-semibold">Ticket</th>
                   <th scope="col" className="py-2 pr-4 font-semibold">Subject</th>
+                  <th scope="col" className="py-2 pr-4 font-semibold">Category</th>
                   <th scope="col" className="py-2 pr-4 font-semibold">Status</th>
                   <th scope="col" className="py-2 font-semibold">Priority</th>
                 </tr>
@@ -125,6 +129,7 @@ export default function DashboardPage() {
                         {t.title}
                       </Link>
                     </td>
+                    <td className="py-3 pr-4"><CategoryBadge category={t.category} /></td>
                     <td className="py-3 pr-4"><StatusBadge status={t.status} /></td>
                     <td className="py-3">{t.priority}</td>
                   </tr>

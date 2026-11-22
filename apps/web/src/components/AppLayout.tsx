@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { getSessionUser } from '../lib/role'
+import { getSessionUser, isAgent } from '../lib/role'
 import { Icon, type IconName } from './Icon'
 
 export default function AppLayout() {
@@ -26,6 +26,9 @@ export default function AppLayout() {
 
   const items: { to: string; label: string; icon: IconName; active: boolean }[] = [
     { to: '/', label: 'Overview', icon: 'home', active: pathname === '/' },
+    ...(isAgent(user.role)
+      ? [{ to: '/my-work', label: 'My work', icon: 'ticket' as const, active: pathname === '/my-work' }]
+      : []),
     {
       to: '/tickets',
       label: 'Tickets',

@@ -4,7 +4,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { z } from 'zod'
 import { createTicketSchema, type CreateTicketInput } from '../features/tickets/schemas'
 import { useCreateTicket } from '../features/tickets/hooks/useTicketQueries'
-import { TICKET_PRIORITIES } from '../features/tickets/types'
+import {
+  CATEGORY_LABELS,
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+} from '../features/tickets/types'
 
 const inputClass =
   'w-full border border-[#888c8c] rounded px-2.5 py-2 text-sm bg-white focus:outline-none focus:border-[#e77600] focus:ring-2 focus:ring-[#e77600]/30'
@@ -23,7 +27,7 @@ export default function NewTicketPage() {
     defaultValues: {
       title: '',
       description: '',
-      category: '',
+      category: 'general',
       priority: 'P3',
     },
   })
@@ -35,7 +39,7 @@ export default function NewTicketPage() {
     })
   }
 
-  // ⚠️ Fields (title, description, priority) createTicketSchema se match karo.
+  // ⚠️ Fields (title, description, category, priority) createTicketSchema se match karo.
   // Agar priority optional/default wali hai to us field ko hata sakte ho.
   return (
     <section className="max-w-xl">
@@ -62,10 +66,16 @@ export default function NewTicketPage() {
         </div>
 
         <div>
-          <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
-          <input id="category" className={inputClass} {...register('category')} />
-          {errors.category && <p className="text-xs text-[#c40000] mt-1">{errors.category.message}</p>}
-        </div>
+  <label htmlFor="category" className="block text-sm font-medium mb-1">Category</label>
+  <select id="category" className={inputClass} {...register('category')}>
+    <option value="">Select category</option>
+    {TICKET_CATEGORIES.map((c) => (
+      <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+    ))}
+  </select>
+  {errors.category && <p className="text-xs text-[#c40000] mt-1">{errors.category.message}</p>}
+</div>
+
 
         <div>
           <label htmlFor="priority" className="block text-sm font-medium mb-1">Priority</label>

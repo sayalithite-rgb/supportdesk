@@ -2,9 +2,15 @@
 export {
   createTicketSchema,
   type CreateTicketInput,
-} from '../../../../api/src/validation/tickets.validation'
+} from '../../../../api/src/validation/tickets.validation';
 
 export {
   createCommentSchema,
   type CreateCommentInput,
-} from '../../../../api/src/validation/comments.validation'
+} from '../../../../api/src/validation/comments.validation';
+
+export {
+  TICKET_CATEGORIES,
+  CATEGORY_LABELS,
+  type TicketCategory,
+} from './types';
