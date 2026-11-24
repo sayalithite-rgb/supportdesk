@@ -12,17 +12,56 @@ import { CATEGORIZE_PROMPT, buildCategorizeUserMessage } from './prompts/categor
 import type { AiCallMeta, CategorizeInput, ReplyContext } from './types'
 
 // OpenAI ke andar ki koi bhi error user ko seedha nahi dikhti, sirf safe AiProviderError
+function safeDiagnostic(value: unknown): string | undefined {
+  if (typeof value !== 'string' || value.length > 100 || !/^[a-zA-Z0-9_.-]+$/.test(value)) {
+    return undefined
+  }
+  return value
+}
+
+function providerStatus(err: unknown): number | undefined {
+  if (typeof err !== 'object' || err === null || !('status' in err)) return undefined
+  const status = err.status
+  return typeof status === 'number' ? status : undefined
+}
+
+function logProviderFailure(err: unknown, status?: number): void {
+  const details = typeof err === 'object' && err !== null
+    ? err as { code?: unknown; requestID?: unknown; name?: unknown }
+    : {}
+  const providerCode = safeDiagnostic(details.code)
+  const requestId = safeDiagnostic(details.requestID)
+  const errorType = safeDiagnostic(details.name)
+  if (
+    status === undefined &&
+    !providerCode &&
+    !requestId &&
+    (!errorType || errorType === 'Error' || errorType === 'AiProviderError')
+  ) {
+    return
+  }
+
+  console.error(JSON.stringify({
+    event: 'ai_provider_error',
+    status,
+    providerCode,
+    requestId,
+    errorType,
+  }))
+}
+
 function toAiError(err: unknown): Error {
   if (
     err instanceof AiNotConfiguredError ||
     err instanceof AiInputError ||
-    err instanceof AiInvalidOutputError ||
-    err instanceof AiProviderError
+    err instanceof AiInvalidOutputError
   ) {
     return err
   }
-  const status = (err as { status?: unknown } | null)?.status
-  return new AiProviderError('AI provider request failed', typeof status === 'number' ? status : undefined)
+  const status = providerStatus(err)
+  logProviderFailure(err, status)
+  if (err instanceof AiProviderError) return err
+  return new AiProviderError('AI provider request failed', status)
 }
 
 /** Feature 1: reply draft, tukde-tukde mein (stream) */
@@ -46,8 +85,7 @@ export async function* streamSuggestedReply(
       {
         model,
         stream: true,
-        stream_options: { include_usage: true }, // warna token usage nahi milta
-        max_completion_tokens: 600, // kharch par lagaam
+        max_tokens: 600,
         messages: [
           { role: 'system', content: SUGGEST_REPLY_PROMPT.system },
           { role: 'user', content: buildSuggestReplyUserMessage(ctx) },
@@ -99,7 +137,7 @@ export async function categorizeTicket(
     const completion = await client.chat.completions.create({
       model,
       response_format: { type: 'json_object' },
-      max_completion_tokens: 300,
+      max_tokens: 300,
       messages: [
         { role: 'system', content: CATEGORIZE_PROMPT.system },
         { role: 'user', content: buildCategorizeUserMessage(input) },

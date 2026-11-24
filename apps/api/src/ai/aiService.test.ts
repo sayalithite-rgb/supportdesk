@@ -56,7 +56,8 @@ describe('streamSuggestedReply', () => {
 
     const args = mockCreate.mock.calls[0][0]
     expect(args.stream).toBe(true)
-    expect(args.stream_options).toEqual({ include_usage: true })
+    expect(args.max_tokens).toBe(600)
+    expect(args.stream_options).toBeUndefined()
     expect(args.messages[0].role).toBe('system') // trusted instruction alag
     expect(args.messages[1].content).toContain('Printer offline') // ticket data alag
     expect(recordAiCall).toHaveBeenCalledWith(
@@ -71,9 +72,28 @@ describe('streamSuggestedReply', () => {
   })
 
   it('maps provider failure to AiProviderError and logs it', async () => {
-    mockCreate.mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }))
-    await expect(collect(streamSuggestedReply(ctx, meta))).rejects.toBeInstanceOf(AiProviderError)
-    expect(recordAiCall).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }))
+    const log = jest.spyOn(console, 'error').mockImplementation(() => {})
+    mockCreate.mockRejectedValue(Object.assign(new Error('private provider response'), {
+      status: 401,
+      code: 'invalid_api_key',
+      requestID: 'req_123',
+    }))
+    try {
+      await expect(collect(streamSuggestedReply(ctx, meta))).rejects.toMatchObject({
+        status: 401,
+      })
+      expect(log).toHaveBeenCalledWith(JSON.stringify({
+        event: 'ai_provider_error',
+        status: 401,
+        providerCode: 'invalid_api_key',
+        requestId: 'req_123',
+        errorType: 'Error',
+      }))
+      expect(log.mock.calls.flat().join(' ')).not.toContain('private provider response')
+      expect(recordAiCall).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }))
+    } finally {
+      log.mockRestore()
+    }
   })
 
   it('surfaces a stream interruption after partial output', async () => {
@@ -108,6 +128,7 @@ describe('categorizeTicket', () => {
       priority: 'P2',
       reason: 'Login problem',
     })
+    expect(mockCreate.mock.calls[0][0].max_tokens).toBe(300)
     expect(recordAiCall).toHaveBeenCalledWith(
       expect.objectContaining({ feature: 'categorize', status: 'ok', usage: completion('').usage }),
     )

@@ -10,7 +10,12 @@ export function getOpenAI(): { client: OpenAI; model: string } {
   if (!apiKey || !model) throw new AiNotConfiguredError()
 
   if (!client) {
-    client = new OpenAI({ apiKey, timeout: env.OPENAI_TIMEOUT_MS, maxRetries: 1 })
+    client = new OpenAI({
+      apiKey,
+      ...(env.OPENAI_BASE_URL ? { baseURL: env.OPENAI_BASE_URL } : {}),
+      timeout: env.OPENAI_TIMEOUT_MS,
+    })
   }
+
   return { client, model }
 }
