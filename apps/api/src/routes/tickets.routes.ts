@@ -3,6 +3,8 @@ import { ticketsController } from '../controllers/tickets.controller';
 import { usersController } from '../controllers/users.controller';
 import { requireAuth } from '../middleware/requireAuth';
 import { requireRole } from '../middleware/requireRole';
+import { aiRateLimiter } from '../middleware/aiRateLimiter'
+import { ticketAiController } from '../controllers/ticketAi.controller'
 
 const router = Router();
 
@@ -18,6 +20,9 @@ router.get('/:id', anyUser, ticketsController.getById);
 router.post('/', anyUser, ticketsController.create);
 router.put('/:id', staffOnly, ticketsController.replace);
 router.patch('/:id/assign', adminOnly, ticketsController.assign);
+// baaki routes ke saath (staffOnly wahi jo PUT/PATCH/DELETE par hai):
+router.post('/:id/ai/suggest-reply', staffOnly, aiRateLimiter, ticketAiController.suggestReply)
+router.post('/:id/ai/categorize', staffOnly, aiRateLimiter, ticketAiController.categorize)
 router.patch('/:id', staffOnly, ticketsController.update);
 router.delete('/:id', staffOnly, ticketsController.remove);
 

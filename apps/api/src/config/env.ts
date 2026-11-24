@@ -5,6 +5,17 @@ import { z } from 'zod';
 // Load apps/api/.env no matter where the command is run from
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), quiet: true });
 
+// Treat empty strings ("") as missing so z.coerce.number() does not turn "" into 0
+const optionalNumber = z.preprocess(
+  (value) => (value === '' || value === undefined ? undefined : value),
+  z.coerce.number().nonnegative().optional()
+);
+
+const optionalNonEmptyString = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().min(1).optional()
+);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
@@ -46,6 +57,19 @@ const envSchema = z.object({
 
   LOGIN_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(5),
   LOGIN_RATE_LIMIT_WINDOW_MINUTES: z.coerce.number().int().min(1).default(15),
+
+  OPENAI_API_KEY: optionalNonEmptyString,
+  OPENAI_MODEL: optionalNonEmptyString,
+  OPENAI_TIMEOUT_MS: z.preprocess(
+    (value) => (value === '' || value === undefined ? undefined : value),
+    z.coerce
+      .number({ error: 'OPENAI_TIMEOUT_MS must be a number' })
+      .int()
+      .positive('OPENAI_TIMEOUT_MS must be a positive integer')
+      .default(30000)
+  ),
+  OPENAI_INPUT_COST_PER_1M_USD: optionalNumber,
+  OPENAI_OUTPUT_COST_PER_1M_USD: optionalNumber,
 });
 
 const result = envSchema.safeParse(process.env);

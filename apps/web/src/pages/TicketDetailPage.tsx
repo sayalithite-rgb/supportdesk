@@ -17,6 +17,7 @@ import {
 import StatusBadge from '../features/tickets/components/StatusBadge'
 import AddCommentForm from '../features/tickets/components/AddCommentForm'
 import { EmptyState, ErrorState, LoadingState } from '../features/tickets/components/StateMessage'
+import AiAssistPanel from '../features/tickets/components/AiAssistPanel'
 
 function getCategoryLabel(category?: string | null): string | null {
   if (!category) return null
@@ -62,6 +63,7 @@ export default function TicketDetailPage() {
         <EmptyState title="Ticket not found" />
       ) : (
         <div className="bg-white border border-amz-border rounded-lg p-5 space-y-3">
+          {canManage && ticketQuery.isSuccess && <AiAssistPanel ticketId={id} />}
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-normal">{ticket.title || ticket.subject || 'Untitled ticket'}</h1>

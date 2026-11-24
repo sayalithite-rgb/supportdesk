@@ -100,3 +100,67 @@ export async function apiRequestWithMeta<T, M = unknown>(
   }
   return { data: json.data, meta: json.meta as M }
 }
+export type StreamEvent =
+  | { type: 'delta'; text: string }
+  | { type: 'done' }
+  | { type: 'error'; message: string }
+
+export async function apiStream(
+  path: string,
+  opts: { method?: 'POST' | 'GET'; body?: unknown; signal?: AbortSignal; onEvent: (e: StreamEvent) => void },
+): Promise<void> {
+  const token = tokenStorage.get()
+
+  let res: Response
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: opts.method ?? 'POST',
+      signal: opts.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    })
+  } catch (err) {
+    if (opts.signal?.aborted) throw err
+    throw new ApiError(0, 'Unable to reach the server. Please try again later.')
+  }
+
+  if (!res.ok) {
+    if (res.status === 401) onUnauthorized?.()
+    const json = await res.json().catch(() => null)
+    throw new ApiError(
+      res.status,
+      json?.error?.message ?? `Request failed (HTTP ${res.status}). Please try again.`,
+      json?.error?.code,
+    )
+  }
+  if (!res.body) throw new ApiError(res.status, 'Streaming is not supported by this browser.')
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    let end: number
+    while ((end = buffer.indexOf('\n\n')) !== -1) {
+      const block = buffer.slice(0, end)
+      buffer = buffer.slice(end + 2)
+      const line = block.split('\n').find((l) => l.startsWith('data: '))
+      if (!line) continue
+      let event: StreamEvent | null = null
+      try {
+        event = JSON.parse(line.slice(6)) as StreamEvent
+      } catch {
+        event = null // kharab chunk chhod do
+      }
+      if (event) opts.onEvent(event)
+    }
+  }
+}
