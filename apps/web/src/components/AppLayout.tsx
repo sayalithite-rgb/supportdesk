@@ -76,8 +76,8 @@ export default function AppLayout() {
               aria-current={item.active ? 'page' : undefined}
               className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amz-orange ${
                 item.active
-                  ? 'bg-amz-navy-light border-amz-orange font-bold'
-                  : 'border-transparent text-slate-200 hover:bg-amz-navy-light'
+                  ? 'border-amz-orange bg-[#2d2414] font-bold text-white [&_svg]:text-amz-orange'
+                  : 'border-transparent text-slate-400 hover:bg-amz-navy-light hover:text-slate-100'
               }`}
             >
               <Icon name={item.icon} />
@@ -96,8 +96,7 @@ export default function AppLayout() {
       {/* Main column */}
       <div className="flex-1 min-w-0 flex flex-col">
         <header
-          className="text-white border-b-[3px] border-amz-orange"
-          style={{ background: 'linear-gradient(90deg, #131921, #232f3e)' }}
+          className="border-b-2 border-amz-orange bg-amz-navy text-white"
         >
           <div className="h-[68px] px-4 sm:px-6 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">

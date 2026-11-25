@@ -53,6 +53,7 @@ export type Ticket = {
   createdBy?: TicketUserSummary | null;
   assigneeId?: string | null;
   assignee?: TicketUserSummary | null;
+  slaDueAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

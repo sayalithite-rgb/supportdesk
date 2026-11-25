@@ -7,9 +7,13 @@ import {
 } from './errors'
 import { recordAiCall, type AiUsage } from './usage'
 import { categorizeOutputSchema, type CategorizeSuggestion } from './schemas'
-import { SUGGEST_REPLY_PROMPT, buildSuggestReplyUserMessage } from './prompts/suggest-reply.v1'
+import {
+  REPLY_TONE_INSTRUCTIONS,
+  SUGGEST_REPLY_PROMPT,
+  buildSuggestReplyUserMessage,
+} from './prompts/suggest-reply.v1'
 import { CATEGORIZE_PROMPT, buildCategorizeUserMessage } from './prompts/categorize.v1'
-import type { AiCallMeta, CategorizeInput, ReplyContext } from './types'
+import type { AiCallMeta, CategorizeInput, ReplyContext, ReplyTone } from './types'
 
 // OpenAI ke andar ki koi bhi error user ko seedha nahi dikhti, sirf safe AiProviderError
 function safeDiagnostic(value: unknown): string | undefined {
@@ -69,6 +73,7 @@ export async function* streamSuggestedReply(
   ctx: ReplyContext,
   meta: AiCallMeta,
   signal?: AbortSignal,
+  tone: ReplyTone = 'professional',
 ): AsyncGenerator<string, void, void> {
   const hasContent =
     ctx.ticket.title.trim() !== '' || ctx.ticket.description.trim() !== '' || ctx.comments.length > 0
@@ -87,7 +92,7 @@ export async function* streamSuggestedReply(
         stream: true,
         max_tokens: 600,
         messages: [
-          { role: 'system', content: SUGGEST_REPLY_PROMPT.system },
+          { role: 'system', content: `${SUGGEST_REPLY_PROMPT.system}\n${REPLY_TONE_INSTRUCTIONS[tone]}` },
           { role: 'user', content: buildSuggestReplyUserMessage(ctx) },
         ],
       },

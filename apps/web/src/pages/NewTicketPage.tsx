@@ -34,8 +34,16 @@ export default function NewTicketPage() {
 
   function onSubmit(values: CreateTicketInput) {
     mutation.mutate(values, {
-      // asli response ka id use karke detail page pe jao
-      onSuccess: (ticket) => navigate(`/tickets/${ticket.id}`, { state: { created: true } }),
+      onSuccess: (ticket) => navigate('/', {
+        state: {
+          createdTicket: {
+            id: ticket.id,
+            title: ticket.title || ticket.subject || values.title,
+            status: ticket.status,
+            priority: ticket.priority || values.priority,
+          },
+        },
+      }),
     })
   }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { ApiError } from '../../../lib/api-client'
 import * as aiApi from '../api/ai.api'
+import type { ReplyTone } from '../api/ai.api'
 
 type ReplyStatus = 'idle' | 'streaming' | 'done' | 'error'
 
@@ -11,7 +12,7 @@ export function useSuggestReply(ticketId: string) {
   const [error, setError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (tone: ReplyTone) => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -24,6 +25,7 @@ export function useSuggestReply(ticketId: string) {
     try {
       await aiApi.streamSuggestedReply(
         ticketId,
+        tone,
         (event) => {
           if (event.type === 'delta') {
             setDraft((d) => d + event.text)

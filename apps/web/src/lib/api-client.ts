@@ -1,7 +1,7 @@
-// Dev mein khali string: requests localhost:5174 par jayengi aur Vite proxy forward karega.
+// In development, keep API requests separate from client-side routes such as /tickets/:id.
 // Production mein VITE_API_BASE_URL use hoga.
 const BASE_URL = import.meta.env.DEV
-  ? ''
+  ? '/api'
   : (import.meta.env.VITE_API_BASE_URL as string)
 
 const TOKEN_KEY = 'supportdesk_token'

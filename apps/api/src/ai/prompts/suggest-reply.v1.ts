@@ -1,4 +1,4 @@
-import type { ReplyContext } from '../types'
+import type { ReplyContext, ReplyTone } from '../types'
 
 export const SUGGEST_REPLY_PROMPT = {
   id: 'suggest-reply',
@@ -14,6 +14,12 @@ export const SUGGEST_REPLY_PROMPT = {
     '- Output only the reply text: no subject line, no preface, no notes.',
   ].join('\n'),
 } as const
+
+export const REPLY_TONE_INSTRUCTIONS: Record<ReplyTone, string> = {
+  professional: 'Use a polished, professional, courteous tone.',
+  empathetic: 'Use a warm, empathetic tone that acknowledges the customer’s frustration when appropriate.',
+  concise: 'Use a short, direct tone while remaining courteous and including any necessary next question.',
+}
 
 const MAX_TITLE = 200
 const MAX_DESCRIPTION = 4000

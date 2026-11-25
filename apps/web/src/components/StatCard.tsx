@@ -15,11 +15,11 @@ export default function StatCard({ label, hint, icon, to, value, isLoading, isEr
   return (
     <Link
       to={to}
-      className="block bg-white border border-amz-border rounded-xl p-5 transition hover:border-amz-orange hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amz-orange"
+      className="block rounded-xl border border-amz-border bg-white p-5 shadow-sm transition hover:border-amz-orange hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amz-orange"
     >
       <div className="flex items-start justify-between">
         <span className="text-sm text-slate-600">{label}</span>
-        <span className="h-9 w-9 rounded-lg bg-[#fff4e0] text-[#c45500] flex items-center justify-center">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#fef3c7] text-[#b45309]">
           <Icon name={icon} />
         </span>
       </div>

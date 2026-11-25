@@ -65,6 +65,14 @@ describe('streamSuggestedReply', () => {
     )
   })
 
+  it('applies the selected reply tone to the system instructions', async () => {
+    mockCreate.mockResolvedValue(streamOf([delta('Thank you for reaching out.')]))
+    await collect(streamSuggestedReply(ctx, meta, undefined, 'empathetic'))
+    expect(mockCreate.mock.calls[0][0].messages[0].content).toContain(
+      'Use a warm, empathetic tone',
+    )
+  })
+
   it('rejects an empty ticket without calling the provider', async () => {
     const empty = { ticket: { ...ctx.ticket, title: ' ', description: '' }, comments: [] }
     await expect(collect(streamSuggestedReply(empty, meta))).rejects.toBeInstanceOf(AiInputError)

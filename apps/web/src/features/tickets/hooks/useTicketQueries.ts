@@ -87,9 +87,9 @@ export function useUpdateTicketStatus(ticketId: string) {
 // Dashboard cards ke liye: har status ka total, existing list endpoint ke meta.total se.
 // Backend mein alag stats endpoint hota to wo better hota. Lead ko suggest kar sakte ho.
 // ⚠️ Status values schema.prisma ke TicketStatus enum se match karo
-const COUNT_FILTERS: (TicketStatus | undefined)[] = [undefined, 'open', 'in_progress', 'resolved'];
+const COUNT_FILTERS: (TicketStatus | undefined)[] = [undefined, 'open', 'in_progress', 'resolved', 'closed'];
 
-// Result ka order wahi hai jo COUNT_FILTERS ka: [total, open, in_progress, resolved]
+// Result order matches COUNT_FILTERS: [total, open, in_progress, resolved, closed]
 export function useTicketCounts() {
   return useQueries({
     queries: COUNT_FILTERS.map((status) => ({

@@ -1,6 +1,6 @@
 import { prisma } from '../repositories/prisma' // ⚠️ Step 1 ke grep se asli path
 import { categorizeTicket, streamSuggestedReply } from '../ai/aiService'
-import type { ReplyContext } from '../ai/types'
+import type { ReplyContext, ReplyTone } from '../ai/types'
 
 export class TicketNotFoundError extends Error {
   constructor() {
@@ -36,9 +36,14 @@ async function loadReplyContext(ticketId: string): Promise<ReplyContext> {
 
 export const ticketAiService = {
   // Context pehle bante hain (not-found yahin pakda jata hai), phir stream ka generator wapas aata hai
-  async openSuggestReply(ticketId: string, userId: string | undefined, signal?: AbortSignal) {
+  async openSuggestReply(
+    ticketId: string,
+    userId: string | undefined,
+    signal?: AbortSignal,
+    tone: ReplyTone = 'professional',
+  ) {
     const ctx = await loadReplyContext(ticketId)
-    return streamSuggestedReply(ctx, { ticketId, userId }, signal)
+    return streamSuggestedReply(ctx, { ticketId, userId }, signal, tone)
   },
 
   async categorize(ticketId: string, userId: string | undefined) {

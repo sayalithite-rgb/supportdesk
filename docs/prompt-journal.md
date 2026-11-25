@@ -1,6 +1,34 @@
 # SupportDesk Prompt Journal
+Overview
+Project: SupportDesk (Full-Stack Monorepo — Express, TypeScript, React + Vite)
 
-Ye journal SupportDesk project ke dauran AI ke sath ki gayi key interactions, prompts, aur unke basis par kiye gaye code updates ko track karta hai.
+Scope: Daily prompt log, debugging notes, architectural decisions, and key learnings from Week 1, Day 1 through Week 3, Day 5.
+
+Security Reminder: Never store or paste API keys, database passwords, JWT secrets, or .env contents in journals, screenshots, or Git commits.
+----
+
+#Week 1 Day 1
+Focus / Goal: Project setup, monorepo orientation, and initial workspace configuration.
+
+Key Prompts & Actions:
+
+Explored the SupportDesk repository structure (apps/api, apps/web, environment config, and starter scripts).
+
+Set up local development dependencies and verified initial project startup.
+
+Outcome & Learnings: Established a clean baseline development environment and understood how the backend and frontend packages are organized.
+
+Day 2
+
+Focus / Goal: Core backend skeleton, routing, and configuration management.
+
+Key Prompts & Actions:
+
+Configured environment variable validation (env.ts) and core server middleware/routes.
+
+Tested health endpoints and verified local server startup.
+
+Outcome & Learnings: Centralized environment parsing early prevents silent runtime misconfigurations.
 
 ---
 
@@ -141,3 +169,33 @@ Set up the React, Vite, TypeScript, and Tailwind CSS frontend foundation with a 
 * **Backend Endpoint Check:** Verified `POST http://localhost:3000/auth/login` via PowerShell `Invoke-RestMethod` and browser Network tab (`200 OK` on valid credentials, structured `401` error on invalid credentials)[cite: 3].
 * **Protected Routes:** Confirmed unauthenticated visits redirect to `/login` and authenticated login redirects to `http://localhost:5173` (`Tickets` view inside `AppLayout`)[cite: 1, 2, 4].
 * **Responsive & Console Check:** Tested mobile viewport (`369x501`) and desktop layout; confirmed no sensitive tokens or secrets are logged to the console[cite: 1, 3, 4].
+
+Authentication & Token Refresh
+
+Prompt / Action: Generated a fresh agent accessToken via /auth/login1 and added it as a Bearer Token in Postman's Authorization tab.
+
+Outcome: Resolved 401 Unauthorized (INVALID_TOKEN) errors and confirmed requests reached the AI service layer.
+
+Codebase Provider & Configuration Audit
+
+Prompt / Action: Searched apps/api/src with Select-String to verify OPENAI_API_KEY, OPENAI_MODEL, and OPENAI_BASE_URL usage across env.ts, openaiClient.ts, aiService.ts, and ticketAi.controller.ts.
+
+Outcome: Confirmed env.ts and openaiClient.ts already support OPENAI_BASE_URL and OPENAI_MODEL.
+
+Direct Gemini API & Model Verification
+
+Prompt / Action: Tested the Gemini API key in PowerShell against https://generativelanguage.googleapis.com/v1beta/models using curl.exe and checked Google AI Studio usage/error metrics.
+
+Outcome: Verified the API key is valid and gemini-2.5-flash is available, while identifying past error spikes in Google AI Studio usage graphs and the need for diagnostic logging ([AI_DEBUG]) in aiService.ts to inspect underlying provider errors.
+
+Environment Reload & Secret Hygiene
+
+Prompt / Action: Updated apps/api/.env (OPENAI_MODEL=gemini-2.5-flash and OPENAI_BASE_URL), cleared conflicting PowerShell environment variables (Remove-Item Env:...), restarted the API server with npm run dev, and noted the need to rotate/regenerate exposed secrets/keys and keep .env out of version control and chats.
+
+Outcome: Server reloaded with gemini-2.5-flash active; next step is capturing the exact [AI_DEBUG] error output on failed calls and confirming clean end-to-end Suggest Reply responses.
+
+Learnings & Next Steps
+
+Key Takeaway: Always restart the backend process (Ctrl + C then npm run dev) after .env changes, clear shell-level overrides when testing, and avoid exposing API keys or credentials in screenshots or logs.
+
+Next Step: Inspect the [AI_DEBUG] log output for any remaining 502 responses, rotate any exposed keys/secrets, and verify a full 200 response from Suggest Reply.

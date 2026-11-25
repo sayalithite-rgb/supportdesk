@@ -7,6 +7,11 @@ import {
 } from '../ai/errors'
 import { TicketNotFoundError, ticketAiService } from '../services/ticketAi.service'
 import { idParamSchema } from '../validation/tickets.validation'
+import { z } from 'zod'
+
+const suggestReplyBodySchema = z.object({
+  tone: z.enum(['professional', 'empathetic', 'concise']).default('professional'),
+})
 
 type AuthedRequest = Request & { user?: { id?: string } } // ⚠️ tickets.controller.ts jaise user padhte ho wahi karo
 
@@ -16,8 +21,18 @@ function sendError(res: Response, status: number, code: string, message: string)
   res.status(status).json({ data: null, error: { code, message }, meta: {} })
 }
 
+function providerMessage(status?: number): string {
+  if (status === 401) return 'The AI provider rejected the API key. Check that it is valid for the configured provider.'
+  if (status === 403) return 'The AI provider denied access. Check the key permissions and model access.'
+  if (status === 404) return 'The configured AI model or API endpoint was not found. Check OPENAI_MODEL and OPENAI_BASE_URL.'
+  if (status === 429) return 'The AI provider quota or rate limit was reached. Check the provider account limits.'
+  if (status === 400) return 'The AI provider rejected the request. Check that the configured model supports this request.'
+  if (status !== undefined && status >= 500) return 'The AI provider is temporarily unavailable. Please try again.'
+  return 'The AI provider is unavailable. Please try again.'
+}
+
 function publicMessage(err: unknown): string {
-  if (err instanceof AiProviderError) return 'The AI provider is unavailable. Please try again.'
+  if (err instanceof AiProviderError) return providerMessage(err.status)
   return 'The AI could not finish the reply. Please try again.'
 }
 
@@ -29,7 +44,7 @@ function handleAiError(err: unknown, res: Response, next: NextFunction) {
   if (err instanceof AiInvalidOutputError)
     return sendError(res, 502, 'AI_INVALID_OUTPUT', 'The AI returned an unusable answer. Please try again.')
   if (err instanceof AiProviderError)
-    return sendError(res, 502, 'AI_PROVIDER_ERROR', 'The AI provider is unavailable. Please try again.')
+    return sendError(res, 502, 'AI_PROVIDER_ERROR', providerMessage(err.status))
   return next(err)
 }
 
@@ -42,7 +57,8 @@ export const ticketAiController = {
 
     try {
       const { id } = idParamSchema.parse(req.params)
-      const stream = await ticketAiService.openSuggestReply(id, getUserId(req), abort.signal)
+      const { tone } = suggestReplyBodySchema.parse(req.body ?? {})
+      const stream = await ticketAiService.openSuggestReply(id, getUserId(req), abort.signal, tone)
       const iterator = stream[Symbol.asyncIterator]()
       const first = await iterator.next() // provider ke errors yahin normal HTTP error ban jate hain
 

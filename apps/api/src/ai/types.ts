@@ -9,6 +9,8 @@ export type ReplyContext = {
   comments: { authorRole: string; body: string }[] // purana pehle
 }
 
+export type ReplyTone = 'professional' | 'empathetic' | 'concise'
+
 export type CategorizeInput = { title: string; description: string }
 
 export type AiCallMeta = { ticketId: string; userId?: string }

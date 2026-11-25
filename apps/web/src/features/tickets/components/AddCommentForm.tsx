@@ -1,10 +1,18 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createCommentSchema, type CreateCommentInput } from '../schemas'
 import { useAddComment } from '../hooks/useTicketQueries'
 
-export default function AddCommentForm({ ticketId }: { ticketId: string }) {
+export default function AddCommentForm({
+  ticketId,
+  allowInternalNotes = false,
+}: {
+  ticketId: string
+  allowInternalNotes?: boolean
+}) {
   const mutation = useAddComment(ticketId)
+  const [visibility, setVisibility] = useState<'public' | 'internal'>('public')
   const {
     register,
     handleSubmit,
@@ -13,17 +21,49 @@ export default function AddCommentForm({ ticketId }: { ticketId: string }) {
   } = useForm<CreateCommentInput>({ resolver: zodResolver(createCommentSchema) })
 
   function onSubmit(values: CreateCommentInput) {
-    mutation.mutate(values, { onSuccess: () => reset() })
+    mutation.mutate(
+      { ...values, isInternal: allowInternalNotes && visibility === 'internal' },
+      { onSuccess: () => reset() },
+    )
   }
 
   // ⚠️ Field ka naam ('body') comments.validation.ts se match karo
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-2">
-      <label htmlFor="comment" className="block text-sm font-medium">Add a comment</label>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">
+      {allowInternalNotes && (
+        <div className="flex border-b border-amz-border" role="tablist" aria-label="Comment type">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={visibility === 'public'}
+            onClick={() => setVisibility('public')}
+            className={`min-h-11 border-b-2 px-3 text-sm font-medium ${
+              visibility === 'public' ? 'border-amz-orange text-amz-navy' : 'border-transparent text-slate-500'
+            }`}
+          >
+            Public Reply
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={visibility === 'internal'}
+            onClick={() => setVisibility('internal')}
+            className={`min-h-11 border-b-2 px-3 text-sm font-medium ${
+              visibility === 'internal' ? 'border-amz-orange text-amz-navy' : 'border-transparent text-slate-500'
+            }`}
+          >
+            Internal Note
+          </button>
+        </div>
+      )}
+      <label htmlFor="comment" className="block text-sm font-medium">
+        {visibility === 'internal' ? 'Add an internal note' : 'Write a public reply'}
+      </label>
       <textarea
         id="comment"
-        rows={3}
-        className="w-full border border-[#888c8c] rounded px-2.5 py-2 text-sm focus:outline-none focus:border-[#e77600] focus:ring-2 focus:ring-[#e77600]/30"
+        rows={4}
+        placeholder={visibility === 'internal' ? 'Only your support team can see this note.' : 'Write a reply to the customer…'}
+        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-amz-orange focus:outline-none focus:ring-2 focus:ring-amz-orange/20"
         {...register('content')}
       />
       {errors.content && <p className="text-xs text-[#c40000]">{errors.content.message}</p>}
@@ -33,9 +73,13 @@ export default function AddCommentForm({ ticketId }: { ticketId: string }) {
       <button
         type="submit"
         disabled={mutation.isPending}
-        className="bg-amz-yellow hover:bg-amz-yellow-dark border border-[#fcd200] rounded-full px-5 py-1.5 text-sm disabled:opacity-60"
+        className={`min-h-11 rounded-lg border px-5 text-sm font-semibold disabled:opacity-60 ${
+          visibility === 'internal'
+            ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100'
+            : 'border-[#fcd200] bg-amz-yellow hover:bg-amz-yellow-dark'
+        }`}
       >
-        {mutation.isPending ? 'Posting...' : 'Post comment'}
+        {mutation.isPending ? 'Posting…' : visibility === 'internal' ? 'Add internal note' : 'Send reply'}
       </button>
     </form>
   )

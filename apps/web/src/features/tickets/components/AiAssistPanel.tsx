@@ -1,14 +1,22 @@
 import { useState } from 'react'
 import { useCategorizeTicket, useSuggestReply } from '../hooks/useTicketAi'
+import type { ReplyTone } from '../api/ai.api'
 import CategoryBadge from './CategoryBadge'
 
 const btn =
   'rounded-full border px-4 py-1.5 text-sm font-medium disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77600]'
 
+const TONES: Array<{ value: ReplyTone; label: string }> = [
+  { value: 'professional', label: 'Professional' },
+  { value: 'empathetic', label: 'Empathetic' },
+  { value: 'concise', label: 'Short & Direct' },
+]
+
 export default function AiAssistPanel({ ticketId }: { ticketId: string }) {
   const reply = useSuggestReply(ticketId)
   const categorize = useCategorizeTicket(ticketId)
   const [copied, setCopied] = useState(false)
+  const [tone, setTone] = useState<ReplyTone>('professional')
 
   async function copyDraft() {
     try {
@@ -23,7 +31,7 @@ export default function AiAssistPanel({ ticketId }: { ticketId: string }) {
   const streaming = reply.status === 'streaming'
 
   return (
-    <section aria-labelledby="ai-heading" className="space-y-5 rounded-lg border border-amz-border bg-white p-5">
+    <section aria-labelledby="ai-heading" className="ticket-ai-glow space-y-4 rounded-xl border border-amber-200 bg-white p-4 sm:p-5">
       <div className="flex items-center gap-2">
         <h2 id="ai-heading" className="text-lg font-medium">AI assistant</h2>
         <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-900">AI suggestions</span>
@@ -31,10 +39,31 @@ export default function AiAssistPanel({ ticketId }: { ticketId: string }) {
 
       {/* Feature 1: Suggest reply */}
       <div className="space-y-2">
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-slate-600">Tone</p>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Suggested reply tone">
+            {TONES.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={tone === option.value}
+                onClick={() => setTone(option.value)}
+                disabled={streaming}
+                className={`min-h-9 rounded-full border px-2.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 disabled:opacity-60 ${
+                  tone === option.value
+                    ? 'border-amber-400 bg-amber-50 text-amber-900'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-amber-300'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={reply.start}
+            onClick={() => void reply.start(tone)}
             disabled={streaming}
             className={`${btn} border-[#fcd200] bg-amz-yellow hover:bg-amz-yellow-dark`}
           >

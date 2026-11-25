@@ -1,10 +1,17 @@
-import { Link } from 'react-router-dom'
-import StatCard from '../components/StatCard'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import TicketSearchAndOverview from '../features/tickets/components/TicketSearchAndOverview'
 import StatusBadge from '../features/tickets/components/StatusBadge'
-import CategoryBadge from '../features/tickets/components/CategoryBadge'
-import { ErrorState, LoadingState } from '../features/tickets/components/StateMessage'
+import type { Ticket, TicketPriority } from '../features/tickets/types'
 import { useTicketCounts, useTicketList } from '../features/tickets/hooks/useTicketQueries'
-import { getSessionUser, isStaff } from '../lib/role'
+import { getSessionUser, isAdmin, isAgent } from '../lib/role'
+
+type CreatedTicketNotice = {
+  id: string
+  title: string
+  status: Ticket['status']
+  priority?: TicketPriority | string
+}
 
 function greeting() {
   const hour = new Date().getHours()
@@ -15,130 +22,103 @@ function greeting() {
 
 export default function DashboardPage() {
   const user = getSessionUser()
-  const staff = isStaff(user.role) // sirf text ke liye, asli access backend decide karta hai
-  const [total, open, inProgress, resolved] = useTicketCounts()
-  const recent = useTicketList({ page: 1, pageSize: 5 })
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [noticeDismissed, setNoticeDismissed] = useState(false)
+  const role = isAdmin(user.role) ? 'admin' : isAgent(user.role) ? 'agent' : 'customer'
+  const [total, open, inProgress, resolved, closed] = useTicketCounts()
+  const recent = useTicketList({ page: 1, pageSize: 100 })
+  const state = location.state as { createdTicket?: CreatedTicketNotice } | null
+  const createdTicket = state?.createdTicket
 
-  const rate =
-    total.data && resolved.data !== undefined ? Math.round((resolved.data / total.data) * 100) : null
-
-  // ⚠️ Status values (open, in_progress, resolved) schema.prisma ke enum se match karo
-  const cards = [
-    { label: 'Total tickets', hint: 'All support requests', icon: 'clipboard', to: '/tickets', q: total },
-    { label: 'Open tickets', hint: 'Awaiting resolution', icon: 'clock', to: '/tickets?status=open', q: open },
-    { label: 'In progress', hint: 'Currently being handled', icon: 'refresh', to: '/tickets?status=in_progress', q: inProgress },
-    { label: 'Resolved', hint: 'Successfully completed', icon: 'check', to: '/tickets?status=resolved', q: resolved },
-  ] as const
+  function dismissCreatedNotice() {
+    setNoticeDismissed(true)
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }
 
   return (
     <div>
+      {createdTicket && !noticeDismissed && (
+        <section
+          role="status"
+          aria-live="polite"
+          className="mb-6 rounded-xl border border-emerald-200 bg-white p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-5"
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700" aria-hidden="true">
+              ✓
+            </span>
+            <div className="min-w-0">
+              <h2 className="font-semibold text-slate-900">Ticket submitted</h2>
+              <p className="mt-1 break-words text-sm text-slate-600">
+                <span className="font-medium text-slate-800">#{createdTicket.id.slice(0, 8)}</span>
+                {' · '}
+                {createdTicket.title}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <StatusBadge status={createdTicket.status} />
+                {createdTicket.priority && (
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    {createdTicket.priority}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex shrink-0 items-center gap-3 sm:mt-0">
+            <Link
+              to={`/tickets/${createdTicket.id}`}
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-amz-yellow px-4 text-sm font-semibold text-amz-navy hover:bg-amz-yellow-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amz-orange"
+            >
+              View ticket
+            </Link>
+            <button
+              type="button"
+              onClick={dismissCreatedNotice}
+              aria-label="Dismiss ticket confirmation"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-xl text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amz-orange"
+            >
+              ×
+            </button>
+          </div>
+        </section>
+      )}
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-slate-600 mt-1">
-            {greeting()}, {user.name}. Here is {staff ? 'the support queue' : 'your support activity'} at a glance.
+          <p className="mt-1 text-slate-600">
+            {greeting()}, {user.name}. Here is {role === 'customer' ? 'your support activity' : 'the support queue'} at a glance.
           </p>
         </div>
         <Link
           to="/tickets/new"
-          className="bg-amz-yellow hover:bg-amz-yellow-dark border border-[#fcd200] rounded-full px-5 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amz-orange"
+          className="rounded-full border border-[#fcd200] bg-amz-yellow px-5 py-2 text-sm font-medium hover:bg-amz-yellow-dark focus:outline-none focus:ring-2 focus:ring-amz-orange"
         >
           + New ticket
         </Link>
       </div>
 
-      <h2 className="text-xl font-bold mt-8">Ticket overview</h2>
-      <p className="text-sm text-slate-600 mb-4">
-        {staff ? 'Summary of all support tickets' : 'Summary of your support tickets'}
+      <h2 className="mt-8 text-xl font-bold">Ticket overview</h2>
+      <p className="mb-4 text-sm text-slate-600">
+        {role === 'customer' ? 'Summary of your support tickets' : 'Summary of all support tickets'}
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((c) => (
-          <StatCard
-            key={c.label}
-            label={c.label}
-            hint={c.hint}
-            icon={c.icon}
-            to={c.to}
-            value={c.q.data}
-            isLoading={c.q.isPending}
-            isError={c.q.isError}
-          />
-        ))}
-      </div>
-
-      {rate !== null && (
-        <div className="mt-4 bg-white border border-amz-border rounded-xl p-4">
-          <div className="flex justify-between text-sm">
-            <span>Resolution rate</span>
-            <span className="font-bold">{rate}%</span>
-          </div>
-          <div
-            className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden"
-            role="progressbar"
-            aria-label="Resolution rate"
-            aria-valuenow={rate}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div className="h-full bg-amz-orange" style={{ width: `${rate}%` }} />
-          </div>
-        </div>
-      )}
-
-      <section className="mt-8 bg-white border border-amz-border rounded-xl p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold">Recent tickets</h2>
-            <p className="text-sm text-slate-600">
-              {staff ? 'Latest requests from customers' : 'Your latest support requests'}
-            </p>
-          </div>
-          <Link to="/tickets" className="text-sm font-medium text-amz-link hover:text-amz-link-hover hover:underline">
-            View all
-          </Link>
-        </div>
-
-        <div className="mt-4 overflow-x-auto">
-          {recent.isPending ? (
-            <LoadingState label="Loading tickets..." />
-          ) : recent.isError ? (
-            <ErrorState error={recent.error} onRetry={() => recent.refetch()} />
-          ) : recent.data.data.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">
-              No ticket data available yet.{' '}
-              <Link to="/tickets/new" className="text-amz-link hover:underline">Create your first ticket</Link>
-            </p>
-          ) : (
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-amz-border">
-                  <th scope="col" className="py-2 pr-4 font-semibold">Ticket</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Subject</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Category</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Status</th>
-                  <th scope="col" className="py-2 font-semibold">Priority</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.data.data.map((t) => (
-                  <tr key={t.id} className="border-b border-amz-border last:border-0">
-                    <td className="py-3 pr-4 font-mono text-xs text-slate-500">#{String(t.id).slice(0, 8)}</td>
-                    <td className="py-3 pr-4">
-                      <Link to={`/tickets/${t.id}`} className="text-amz-link hover:text-amz-link-hover hover:underline font-medium">
-                        {t.title}
-                      </Link>
-                    </td>
-                    <td className="py-3 pr-4"><CategoryBadge category={t.category} /></td>
-                    <td className="py-3 pr-4"><StatusBadge status={t.status} /></td>
-                    <td className="py-3">{t.priority}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </section>
+      <TicketSearchAndOverview
+        tickets={recent.data?.data ?? []}
+        role={role}
+        counts={{
+          total: { value: total.data, isLoading: total.isPending, isError: total.isError },
+          open: { value: open.data, isLoading: open.isPending, isError: open.isError },
+          inProgress: { value: inProgress.data, isLoading: inProgress.isPending, isError: inProgress.isError },
+          resolved: { value: resolved.data, isLoading: resolved.isPending, isError: resolved.isError },
+          closed: { value: closed.data, isLoading: closed.isPending, isError: closed.isError },
+        }}
+        isLoading={recent.isPending}
+        isError={recent.isError}
+        error={recent.error}
+        onRetry={() => void recent.refetch()}
+      />
     </div>
   )
 }

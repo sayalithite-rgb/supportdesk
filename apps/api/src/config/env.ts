@@ -11,6 +11,7 @@ const optionalNumber = z.preprocess(
   z.coerce.number().nonnegative().optional()
 );
 
+
 const optionalNonEmptyString = z.preprocess(
   (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
   z.string().min(1).optional()
@@ -60,6 +61,7 @@ const envSchema = z.object({
 
   OPENAI_API_KEY: optionalNonEmptyString,
   OPENAI_MODEL: optionalNonEmptyString,
+  OPENAI_BASE_URL: z.string().url().optional(),
   OPENAI_TIMEOUT_MS: z.preprocess(
     (value) => (value === '' || value === undefined ? undefined : value),
     z.coerce

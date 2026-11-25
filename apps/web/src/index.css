@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-amz-navy: #131921;
-  --color-amz-navy-light: #232f3e;
-  --color-amz-orange: #ff9900;
-  --color-amz-orange-light: #febd69;
-  --color-amz-yellow: #ffd814;
-  --color-amz-yellow-dark: #f7ca00;
+  --color-amz-navy: #111a24;
+  --color-amz-navy-light: #182533;
+  --color-amz-orange: #f59e0b;
+  --color-amz-orange-light: #fef3c7;
+  --color-amz-yellow: #fbbf24;
+  --color-amz-yellow-dark: #f59e0b;
   --color-amz-link: #007185;
   --color-amz-link-hover: #c7511f;
-  --color-amz-bg: #eaeded;
-  --color-amz-border: #d5d9d9;
-  --color-amz-text: #0f1111;
+  --color-amz-bg: #f1f3f5;
+  --color-amz-border: #e3e7ec;
+  --color-amz-text: #111827;
   --font-sans: "Amazon Ember", Arial, Helvetica, sans-serif;
 }
 
