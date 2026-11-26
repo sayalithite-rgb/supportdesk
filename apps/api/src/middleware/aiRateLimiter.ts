@@ -1,14 +1,43 @@
-import rateLimit from 'express-rate-limit'
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import type { Request } from 'express';
 
-// express-rate-limit v6 mein 'limit' ki jagah 'max' likhte hain (loginRateLimiter dekho)
-export const aiRateLimiter = rateLimit({
-  windowMs: 60_000,
-  limit: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    data: null,
-    error: { code: 'RATE_LIMITED', message: 'Too many AI requests. Please wait a minute.' },
-    meta: {},
-  },
-})
+type AuthenticatedRequest = Request & {
+  user?: {
+    id?: string;
+    sub?: string;
+  };
+};
+
+function getAiRateLimitKey(req: Request): string {
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.id ?? authReq.user?.sub;
+
+  if (typeof userId === 'string' && userId.trim().length > 0) {
+    return `user:${userId.trim()}`;
+  }
+
+  return `ip:${ipKeyGenerator(req.ip ?? 'unknown')}`;
+}
+
+export function createAiRateLimiter(options: { windowMs: number; maxRequestsPerWindow: number }) {
+  return rateLimit({
+    windowMs: options.windowMs,
+    limit: options.maxRequestsPerWindow,
+    keyGenerator: getAiRateLimitKey,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      data: null,
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many AI requests. Please wait a minute.',
+      },
+      meta: {},
+    },
+  });
+}
+
+export const aiRateLimiter = createAiRateLimiter({
+  windowMs: Number(process.env.AI_RATE_LIMIT_WINDOW_MS ?? 60_000),
+  maxRequestsPerWindow: Number(process.env.AI_RATE_LIMIT_MAX ?? 10),
+});

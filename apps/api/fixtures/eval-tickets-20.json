@@ -1,0 +1,22 @@
+[
+  { "id": "T-01", "subject": "Double charge on card", "body": "My card was billed twice for this month's plan.", "expectedCategory": "BILLING" },
+  { "id": "T-02", "subject": "Refund not received", "body": "Cancelled last week, still waiting for refund.", "expectedCategory": "BILLING" },
+  { "id": "T-03", "subject": "GST details on invoice", "body": "Please add our company GST number to the invoice.", "expectedCategory": "BILLING" },
+  { "id": "T-04", "subject": "Checkout payment failed", "body": "Payment fails with error 500 during checkout.", "expectedCategory": "BILLING" },
+  { "id": "T-05", "subject": "Webhook returning 502", "body": "Webhook deliveries are failing with 502 bad gateway.", "expectedCategory": "TECHNICAL" },
+  { "id": "T-06", "subject": "Charts stuck loading", "body": "Dashboard analytics widgets keep spinning indefinitely.", "expectedCategory": "TECHNICAL" },
+  { "id": "T-07", "subject": "CSV export timeout", "body": "Exporting large ticket CSV times out after 30s.", "expectedCategory": "TECHNICAL" },
+  { "id": "T-08", "subject": "API rate limit doc unclear", "body": "Need clarity on rate limit response headers.", "expectedCategory": "TECHNICAL" },
+  { "id": "T-09", "subject": "Cannot login after reset", "body": "Password reset succeeded but login still fails.", "expectedCategory": "ACCOUNT" },
+  { "id": "T-10", "subject": "Update login email", "body": "How can I change the primary email on my account?", "expectedCategory": "ACCOUNT" },
+  { "id": "T-11", "subject": "Lost 2FA authenticator", "body": "Lost my phone with authenticator app; need 2FA reset.", "expectedCategory": "ACCOUNT" },
+  { "id": "T-12", "subject": "Remove ex-member access", "body": "Please remove a former team member from workspace.", "expectedCategory": "ACCOUNT" },
+  { "id": "T-13", "subject": "Dark mode request", "body": "Please add a dark mode theme to the ticket view.", "expectedCategory": "FEATURE_REQUEST" },
+  { "id": "T-14", "subject": "Bulk ticket assign", "body": "It would help to assign multiple tickets at once.", "expectedCategory": "FEATURE_REQUEST" },
+  { "id": "T-15", "subject": "Slack alert integration", "body": "Can we get Slack notifications for urgent tickets?", "expectedCategory": "FEATURE_REQUEST" },
+  { "id": "T-16", "subject": "Custom SLA per queue", "body": "Add support for custom SLA timers on each queue.", "expectedCategory": "FEATURE_REQUEST" },
+  { "id": "T-17", "subject": "Support hours inquiry", "body": "What are your standard support working hours?", "expectedCategory": "GENERAL" },
+  { "id": "T-18", "subject": "Release notes location", "body": "Where can I check recent product release notes?", "expectedCategory": "GENERAL" },
+  { "id": "T-19", "subject": "Onboarding session time", "body": "When is the next product walkthrough scheduled?", "expectedCategory": "GENERAL" },
+  { "id": "T-20", "subject": "Getting started guide", "body": "Where can I find basic setup documentation?", "expectedCategory": "GENERAL" }
+]

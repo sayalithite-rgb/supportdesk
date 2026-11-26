@@ -3,6 +3,8 @@ import { useCategorizeTicket, useSuggestReply } from '../hooks/useTicketAi'
 import type { ReplyTone } from '../api/ai.api'
 import CategoryBadge from './CategoryBadge'
 
+export const MANUAL_FALLBACK_MESSAGE = 'AI unavailable — reply manually.'
+
 const btn =
   'rounded-full border px-4 py-1.5 text-sm font-medium disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e77600]'
 
@@ -29,6 +31,8 @@ export default function AiAssistPanel({ ticketId }: { ticketId: string }) {
   }
 
   const streaming = reply.status === 'streaming'
+  const hasReplyError = Boolean(reply.error)
+  const hasCategorizeError = Boolean(categorize.isError)
 
   return (
     <section aria-labelledby="ai-heading" className="ticket-ai-glow space-y-4 rounded-xl border border-amber-200 bg-white p-4 sm:p-5">
@@ -76,8 +80,13 @@ export default function AiAssistPanel({ ticketId }: { ticketId: string }) {
           )}
         </div>
 
-        {reply.error && (
-          <p role="alert" className="text-sm text-[#c40000]">⚠ {reply.error}</p>
+        {hasReplyError && (
+          <div role="alert" className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-[#c40000]">
+            <p className="font-medium">⚠ {MANUAL_FALLBACK_MESSAGE}</p>
+            {reply.error && reply.error !== MANUAL_FALLBACK_MESSAGE && (
+              <p className="mt-0.5 text-xs text-slate-700">{reply.error}</p>
+            )}
+          </div>
         )}
 
         {(reply.draft || streaming) && (
@@ -117,8 +126,13 @@ export default function AiAssistPanel({ ticketId }: { ticketId: string }) {
           {categorize.isPending ? 'Analysing...' : 'Suggest category and priority'}
         </button>
 
-        {categorize.isError && (
-          <p role="alert" className="text-sm text-[#c40000]">⚠ {categorize.error.message}</p>
+        {hasCategorizeError && (
+          <div role="alert" className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-[#c40000]">
+            <p className="font-medium">⚠ {MANUAL_FALLBACK_MESSAGE}</p>
+            {categorize.error?.message && categorize.error.message !== MANUAL_FALLBACK_MESSAGE && (
+              <p className="mt-0.5 text-xs text-slate-700">{categorize.error.message}</p>
+            )}
+          </div>
         )}
 
         {categorize.data && (
