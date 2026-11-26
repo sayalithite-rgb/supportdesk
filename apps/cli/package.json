@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "jest --runInBand",
+    "test": "jest",
     "build": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^26.6.6",
     "jest": "^29.7.0",
-    "ts-jest": "^29.1.5",
-    "typescript": "^5.6.3"
+    "ts-jest": "^29.4.15",
+    "typescript": "^5.9.3"
   }
 }

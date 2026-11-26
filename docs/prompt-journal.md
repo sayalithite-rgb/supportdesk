@@ -1,6 +1,34 @@
 # SupportDesk Prompt Journal
+Overview
+Project: SupportDesk (Full-Stack Monorepo — Express, TypeScript, React + Vite)
 
-Ye journal SupportDesk project ke dauran AI ke sath ki gayi key interactions, prompts, aur unke basis par kiye gaye code updates ko track karta hai.
+Scope: Daily prompt log, debugging notes, architectural decisions, and key learnings from Week 1, Day 1 through Week 3, Day 5.
+
+Security Reminder: Never store or paste API keys, database passwords, JWT secrets, or .env contents in journals, screenshots, or Git commits.
+----
+
+#Week 1 Day 1
+Focus / Goal: Project setup, monorepo orientation, and initial workspace configuration.
+
+Key Prompts & Actions:
+
+Explored the SupportDesk repository structure (apps/api, apps/web, environment config, and starter scripts).
+
+Set up local development dependencies and verified initial project startup.
+
+Outcome & Learnings: Established a clean baseline development environment and understood how the backend and frontend packages are organized.
+
+Day 2
+
+Focus / Goal: Core backend skeleton, routing, and configuration management.
+
+Key Prompts & Actions:
+
+Configured environment variable validation (env.ts) and core server middleware/routes.
+
+Tested health endpoints and verified local server startup.
+
+Outcome & Learnings: Centralized environment parsing early prevents silent runtime misconfigurations.
 
 ---
 
@@ -86,3 +114,88 @@ Ye journal SupportDesk project ke dauran AI ke sath ki gayi key interactions, pr
 - **AI Response Summary:** Identified that the string template literal was missing hyphens (`-`) between tokens.
 - **Changes Made & Why:** Restored hyphens in `generateTicketId` to match the expected format validation.
 - **Outcome:** Reran `npm test` successfully; confirmed the bug was caught by tests and fixed locally without committing the broken state.
+## Day 13 — Frontend Foundations (`SupportDesk`)
+**Date:** 17 November 2026  
+**Project:** SupportDesk (`apps/web`)  
+
+### 1. Objective
+Set up the React, Vite, TypeScript, and Tailwind CSS frontend foundation with a feature-based directory structure, a centralized environment-configured API client (`VITE_API_BASE_URL`), a responsive login flow, shared application layout, and protected routes connected to the real backend authentication mechanism[cite: 1].
+
+---
+
+### 2. Prompts Used
+* **Planning Prompt:**  
+  > *"Act as a senior frontend engineer working on the SupportDesk React application. Inspect the existing repository and supplied login API contract. Do not write code yet. Create an implementation plan for a responsive login page, shared application layout, one API client whose base URL comes from an environment variable, authentication state based on the actual backend mechanism, protected routes, and clear loading/validation/success/error states. Use existing React, Vite, TypeScript and Tailwind conventions. Identify files to create or modify, dependencies, risks and tests. Do not invent endpoints, response fields, packages or authentication behaviour."*[cite: 1]
+
+* **API Client Prompt:**  
+  > *"Implement one shared API client based on the actual SupportDesk repository and backend contract. Requirements: TypeScript strict mode; base URL from import.meta.env.VITE_API_BASE_URL; central request configuration and error handling; actual authentication mechanism; no hard-coded URLs; no invented endpoints; no API calls in React components; focused success and failure tests."*[cite: 1]
+
+* **Debugging & Integration Prompt:**  
+  > *"Diagnosed POST http://localhost:3000/api/auth/login 404 (Not Found) and INVALID_CREDENTIALS error when connecting LoginPage to the live backend API."*[cite: 3]
+
+* **Code Review Prompt:**  
+  > *"Act as a senior frontend architect reviewing my Day 13 SupportDesk implementation. Inspect the actual diff and repository context. Verify: React/Vite/TypeScript conventions; folder structure; no API calls or fetch inside UI components; API base URL from VITE_API_BASE_URL; real backend login contract; auth state and protected routes match the backend; loading/validation/error/responsive states; accessibility; no exposed secrets; and meaningful tests."*[cite: 1]
+
+---
+
+### 3. AI Output & Implementation Summary
+* **Folder Structure Created (`apps/web/src`):**
+  * `pages/` (`LoginPage.tsx`, `TicketsPage.tsx`)[cite: 1, 2]
+  * `components/` (`AppLayout.tsx`, `ProtectedRoute.tsx`)[cite: 1, 2]
+  * `features/tickets/` (`api/`, `hooks/`, `components/`)[cite: 1]
+  * `lib/` (`api-client.ts`, `auth.tsx`)[cite: 1, 2]
+* **Centralized API Client (`src/lib/api-client.ts`):**
+  * Configured `baseURL` using `import.meta.env.VITE_API_BASE_URL` without hard-coded URLs[cite: 1].
+  * Added request/response handling to attach credentials/tokens and handle unauthorized (`401`) responses safely.
+* **Login & App Shell:**
+  * Built responsive `LoginPage.tsx` with React Hook Form validation, disabled submit state during requests, and server/validation error banners[cite: 1, 2].
+  * Built `AppLayout.tsx` with sidebar navigation (`SupportDesk`, `Tickets`), header with `Logout` action, and main content outlet[cite: 1, 4].
+
+---
+
+### 4. Issues Encountered & Fixes Applied (Independent Verification)
+1. **404 Not Found on Login (`POST /api/auth/login`):**
+   * **Root Cause:** `VITE_API_BASE_URL` included `/api` (`http://localhost:3000/api`), whereas the backend auth route was mounted directly at `http://localhost:3000/auth/login`[cite: 3].
+   * **Fix:** Updated `VITE_API_BASE_URL=http://localhost:3000` in `.env` / `.env.example` and restarted the Vite dev server.
+2. **Invalid Credentials During API Verification:**
+   * **Root Cause:** Tested with unseeded credentials (`sayali12.new@example.com`), returning `INVALID_CREDENTIALS` from the backend[cite: 2, 3].
+   * **Fix:** Verified valid user records in Prisma Studio and authenticated successfully against the live backend[cite: 3, 4].
+3. **Architecture & Boundary Check:**
+   * Verified zero direct `fetch()` or API calls inside UI components (`LoginPage.tsx`, `AppLayout.tsx`, `TicketsPage.tsx`)[cite: 1, 2].
+
+---
+
+### 5. Verification Evidence
+* **Backend Endpoint Check:** Verified `POST http://localhost:3000/auth/login` via PowerShell `Invoke-RestMethod` and browser Network tab (`200 OK` on valid credentials, structured `401` error on invalid credentials)[cite: 3].
+* **Protected Routes:** Confirmed unauthenticated visits redirect to `/login` and authenticated login redirects to `http://localhost:5173` (`Tickets` view inside `AppLayout`)[cite: 1, 2, 4].
+* **Responsive & Console Check:** Tested mobile viewport (`369x501`) and desktop layout; confirmed no sensitive tokens or secrets are logged to the console[cite: 1, 3, 4].
+
+Authentication & Token Refresh
+
+Prompt / Action: Generated a fresh agent accessToken via /auth/login1 and added it as a Bearer Token in Postman's Authorization tab.
+
+Outcome: Resolved 401 Unauthorized (INVALID_TOKEN) errors and confirmed requests reached the AI service layer.
+
+Codebase Provider & Configuration Audit
+
+Prompt / Action: Searched apps/api/src with Select-String to verify OPENAI_API_KEY, OPENAI_MODEL, and OPENAI_BASE_URL usage across env.ts, openaiClient.ts, aiService.ts, and ticketAi.controller.ts.
+
+Outcome: Confirmed env.ts and openaiClient.ts already support OPENAI_BASE_URL and OPENAI_MODEL.
+
+Direct Gemini API & Model Verification
+
+Prompt / Action: Tested the Gemini API key in PowerShell against https://generativelanguage.googleapis.com/v1beta/models using curl.exe and checked Google AI Studio usage/error metrics.
+
+Outcome: Verified the API key is valid and gemini-2.5-flash is available, while identifying past error spikes in Google AI Studio usage graphs and the need for diagnostic logging ([AI_DEBUG]) in aiService.ts to inspect underlying provider errors.
+
+Environment Reload & Secret Hygiene
+
+Prompt / Action: Updated apps/api/.env (OPENAI_MODEL=gemini-2.5-flash and OPENAI_BASE_URL), cleared conflicting PowerShell environment variables (Remove-Item Env:...), restarted the API server with npm run dev, and noted the need to rotate/regenerate exposed secrets/keys and keep .env out of version control and chats.
+
+Outcome: Server reloaded with gemini-2.5-flash active; next step is capturing the exact [AI_DEBUG] error output on failed calls and confirming clean end-to-end Suggest Reply responses.
+
+Learnings & Next Steps
+
+Key Takeaway: Always restart the backend process (Ctrl + C then npm run dev) after .env changes, clear shell-level overrides when testing, and avoid exposing API keys or credentials in screenshots or logs.
+
+Next Step: Inspect the [AI_DEBUG] log output for any remaining 502 responses, rotate any exposed keys/secrets, and verify a full 200 response from Suggest Reply.

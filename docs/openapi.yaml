@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: SupportDesk API
+  version: 1.0.0
+  description: API documentation for SupportDesk supporting ticketing, RBAC, query parameters, and comments.
+servers:
+  - url: http://localhost:3000
+paths:
+  /auth/login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login with token
+        '401':
+          description: Invalid credentials
+        '429':
+          description: Too many requests (Rate limited)
+
+  /tickets:
+    get:
+      summary: List and query tickets
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [P1, P2, P3, P4]
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+        - in: query
+          name: sortOrder
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: List of tickets with pagination metadata
+        '401':
+          description: Unauthorized
+
+    post:
+      summary: Create a new ticket
+      responses:
+        '201':
+          description: Ticket successfully created
+
+  /tickets/{ticketId}/comments:
+    get:
+      summary: List comments for a ticket
+      parameters:
+        - in: path
+          name: ticketId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of comments
+        '404':
+          description: Ticket not found
+
+    post:
+      summary: Add a comment to a ticket
+      parameters:
+        - in: path
+          name: ticketId
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Comment created successfully
+        '403':
+          description: Forbidden (Customer trying internal comment or wrong access)
