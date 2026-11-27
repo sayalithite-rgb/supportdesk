@@ -1,0 +1,20 @@
+.ticket-ai-glow {
+  animation: ticket-ai-glow 3.2s ease-in-out infinite;
+}
+
+@keyframes ticket-ai-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(245 160 0 / 8%), 0 1px 3px rgb(15 23 42 / 5%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgb(245 160 0 / 10%), 0 4px 16px rgb(245 160 0 / 12%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket-ai-glow {
+    animation: none;
+  }
+}
